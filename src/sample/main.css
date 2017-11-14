@@ -1,0 +1,68 @@
+.photosListView {
+    -fx-background-color: #3c3f41;
+}
+
+.photosListView .list-cell:even {
+    -fx-background-color: #454b4f;
+    -fx-text-fill: #b4b4b4;
+}
+
+.photosListView .list-cell:odd {
+    -fx-background-color: #3c3f41;
+    -fx-text-fill: #b4b4b4;
+}
+
+.photosListView .list-cell:selected {
+    -fx-background-color: #06619e;
+}
+
+.Main {
+    -fx-background-color: #282829;
+    -fx-text-fill: #b4b4b4;
+}
+
+.btn {
+    -fx-background-color: #3c3f41;
+    -fx-text-fill: #b4b4b4;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+}
+
+.chart-legend-item {
+    -fx-text-fill: #b4b4b4;
+}
+
+.chart-title {
+    -fx-text-fill: #b4b4b4;
+}
+
+.imageLabel {
+    -fx-text-fill: #b4b4b4;
+    -fx-alignment: center;
+    -fx-font-size: 18px;
+}
+
+.label {
+    -fx-text-fill: #b4b4b4;
+}
+
+.leftContent {
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 0 2px 2px 0;
+}
+
+.rightContent {
+    -fx-border-color: #3c3f41;
+    -fx-border-width: 0 0 2px 0;
+}
+
+.settings {
+    -fx-alignment: center;
+    -fx-font-size: 18px;
+}
+
+.author {
+    -fx-alignment: center;
+}
