@@ -24,6 +24,11 @@
 .btn {
     -fx-background-color: #3c3f41;
     -fx-text-fill: #b4b4b4;
+    -fx-border-width: 3px;
+}
+
+.btn:pressed {
+    -fx-border-color: #06619e;
 }
 
 .chart-legend {
@@ -65,4 +70,8 @@
 
 .author {
     -fx-alignment: center;
+}
+
+.chart-pie {
+    -fx-border-width: 0;
 }

@@ -33,7 +33,7 @@ public class IndicoGUI extends Application {
 
     private File directory;
     private Stage stage;
-    //private HashMap<String, HashMap<String, Double>> adjustments = new HashMap<String, HashMap<String, Double>>();
+    //TODO private HashMap<String, HashMap<String, Double>> adjustments = new HashMap<String, HashMap<String, Double>>();
     private Indico indico = null; // access to API
     private ObservableList<String> photosList = FXCollections.observableArrayList();
     private ObservableList<PieChart.Data> chartData = FXCollections.observableArrayList();
@@ -63,14 +63,15 @@ public class IndicoGUI extends Application {
     private void browse() {
         directory = directoryChooser.showDialog(stage);
         photosList.clear(); // clearing list
-        if (directory != null && directory.listFiles() != null) {
-            for (File image : directory.listFiles()) { // TODO
-                for (final String extension : EXTENSIONS) {
-                    if (image.getName().endsWith("." + extension)) {
-                        photosList.add(image.getName());
-                        namePath.put(image.getName(), image.getAbsolutePath());
-                        //adjustments.put(image.getAbsolutePath(), null);
-                    }
+        if (!directory.isDirectory() || directory.listFiles() == null) {
+            throw new NullPointerException();
+        }
+        for (File image : directory.listFiles()) { // TODO
+            for (final String extension : EXTENSIONS) {
+                if (image.getName().endsWith("." + extension)) {
+                    photosList.add(image.getName());
+                    namePath.put(image.getName(), image.getAbsolutePath());
+                    //adjustments.put(image.getAbsolutePath(), null);
                 }
             }
         }
@@ -78,71 +79,67 @@ public class IndicoGUI extends Application {
     }
 
     @FXML
-    private void group() throws NoImagesException, CannotCreateDirectoryException, FileNotMovedException {
-        try {
-            if (indico == null) {
-                indico = new Indico("f1cd06f9d3b9857bbecb831f7e4f9592");
-            }
+    private void group() throws NoImagesException, CannotCreateDirectoryException, FileNotMovedException, FileNotFoundException, IndicoException, IOException {
 
-            File[] photosFiles = directory.listFiles();
-
-            if (photosFiles == null) {
-                throw new FileNotFoundException();
-            }
-
-            List<String> photosPatches = new ArrayList<String>();
-            Boolean noImages = true;
-
-            for (File photosFile : photosFiles) { // TODO
-                if (!photosFile.isDirectory()) {
-                    noImages = false;
-                    photosPatches.add(photosFile.getPath());
-                }
-            }
-
-            if (noImages) {
-                throw new NoImagesException();
-            }
-
-            List<Map<String, Double>> results;
-            BatchIndicoResult multiple = indico.imageRecognition.predict(photosPatches);
-            results = multiple.getImageRecognition();
-
-            String maxKey;
-            Double maxValue;
-
-            File destinationFolder;
-            File sourceFile;
-            File destinationFile;
-
-            for (int i = 0; i < results.size(); i++) {
-                maxKey = "";
-                maxValue = 0.0;
-                for (Map.Entry<String, Double> iteratorMap : results.get(i).entrySet()) {
-
-                    if (iteratorMap.getValue() > maxValue) {
-                        maxKey = iteratorMap.getKey();
-                        maxValue = iteratorMap.getValue();
-                    }
-                }
-                sourceFile = new File(photosPatches.get(i));
-                destinationFolder = new File(directory.getPath() + "/" + maxKey + "/");
-
-                if (!destinationFolder.exists()) {
-                    if (!destinationFolder.mkdir()) {
-                        throw new CannotCreateDirectoryException();
-                    }
-                }
-                destinationFile = new File(destinationFolder + "/" + sourceFile.getName());
-                if (!sourceFile.renameTo(destinationFile)) {
-                    throw new FileNotMovedException();
-                }
-            }
-        } catch (IndicoException e) {
-            System.out.println("IndicoException");
-        } catch (IOException e) {
-            System.out.println("IOException");
+        if (directory == null || directory.listFiles() == null) {
+            throw new NoImagesException();
         }
+        File[] photosFiles = directory.listFiles();
+
+        if (photosFiles == null) {
+            throw new FileNotFoundException();
+        }
+
+        List<String> photosPatches = new ArrayList<String>();
+        Boolean noImages = true;
+
+        for (File photosFile : photosFiles) {
+            if (!photosFile.isDirectory()) {
+                noImages = false;
+                photosPatches.add(photosFile.getPath());
+            }
+        }
+
+        if (noImages) {
+            throw new NoImagesException();
+        }
+
+        List<Map<String, Double>> results;
+        BatchIndicoResult multiple = indico.imageRecognition.predict(photosPatches);
+        results = multiple.getImageRecognition();
+
+        String maxKey;
+        Double maxValue;
+
+        File destinationFolder;
+        File sourceFile;
+        File destinationFile;
+
+        for (int i = 0; i < results.size(); i++) {
+            maxKey = "";
+            maxValue = 0.0;
+            for (Map.Entry<String, Double> iteratorMap : results.get(i).entrySet()) {
+
+                if (iteratorMap.getValue() > maxValue) {
+                    maxKey = iteratorMap.getKey();
+                    maxValue = iteratorMap.getValue();
+                }
+            }
+            sourceFile = new File(photosPatches.get(i));
+            destinationFolder = new File(directory.getPath() + "/" + maxKey + "/");
+
+            if (!destinationFolder.exists()) {
+                if (!destinationFolder.mkdir()) {
+                    throw new CannotCreateDirectoryException();
+                }
+            }
+            destinationFile = new File(destinationFolder + "/" + sourceFile.getName());
+            if (!sourceFile.renameTo(destinationFile)) {
+                throw new FileNotMovedException();
+            }
+        }
+        System.out.println("Images successfully grouped.");
+        clear();
     }
 
     @FXML
@@ -151,6 +148,7 @@ public class IndicoGUI extends Application {
         directory = null;
         adjustmentsCount.setText("8"); // default value, 8 adjustments
         adjustmentThreshold.setText("0.01"); // default value, 1%
+        imageLabel.setText("");
         //adjustments.clear();
         photosList.clear();
         // remove data from chart or mb whole chart
@@ -164,21 +162,28 @@ public class IndicoGUI extends Application {
 
     @FXML
     protected void displayData() throws IndicoException, IOException, NullPointerException {
-        String currentElement = photosListView.getSelectionModel().getSelectedItem();
-        imageLabel.setText(currentElement);
-        currentElement = namePath.get(currentElement); // getting image path from its name
-        displayImage(currentElement);
-        // getting data from api:
-        if (indico == null) {
-            indico = new Indico("f1cd06f9d3b9857bbecb831f7e4f9592");
-        }
-        indicoParams.put("top_n", Integer.parseInt(adjustmentsCount.getText()));
-        indicoParams.put("threshold", Double.parseDouble(adjustmentThreshold.getText()));
+        // TODO add checking if there are any images in directory
+        try {
+            chartData.clear();
+            String currentElement = photosListView.getSelectionModel().getSelectedItem();
+            if (currentElement == null) {
+                throw new NullPointerException();
+            }
+            imageLabel.setText(currentElement);
+            currentElement = namePath.get(currentElement); // getting image path from its name
+            displayImage(currentElement);
+            // getting data from api:
 
-        IndicoResult result = indico.imageRecognition.predict(currentElement, indicoParams);
-        Map<String, Double> singleAdjustment = result.getImageRecognition();
-        // display chart:
-        displayChart(singleAdjustment);
+            indicoParams.put("top_n", Integer.parseInt(adjustmentsCount.getText()));
+            indicoParams.put("threshold", Double.parseDouble(adjustmentThreshold.getText()));
+
+            IndicoResult result = indico.imageRecognition.predict(currentElement, indicoParams);
+            Map<String, Double> singleAdjustment = result.getImageRecognition();
+            // display chart:
+            displayChart(singleAdjustment);
+        } catch (Exception e) {
+            System.out.println("Exception");
+        }
     }
 
     @FXML
@@ -189,9 +194,7 @@ public class IndicoGUI extends Application {
 
     private void displayChart(Map<String, Double> data) {
         // display map as a chart
-        imageChart.setTitle("Adjustments");
-        imageChart.setLabelsVisible(false);
-        chartData.clear();
+
         Double others = 0.0;
         for (Map.Entry<String, Double> entry : data.entrySet()) {
             chartData.add(new PieChart.Data(entry.getKey() + " " + (Math.round(entry.getValue() * 100) + "%"), entry.getValue()));
@@ -204,9 +207,19 @@ public class IndicoGUI extends Application {
     }
 
     @FXML
-    public void initialize() {
-        adjustmentsCount.setText("8");
+    public void initialize() { // initialize() has access to FXML fields, while constructor doesnt.
+        adjustmentsCount.setText("10");
         adjustmentThreshold.setText("0.01");
+
+        imageChart.setTitle("Adjustments");
+        imageChart.setLabelsVisible(false);
+        imageChart.setAnimated(false); // this prevents displaying bug
+
+        try {
+            indico = new Indico("f1cd06f9d3b9857bbecb831f7e4f9592");
+        } catch (IndicoException e) {
+            System.out.println("IndicoException");
+        }
     }
 
     @Override
@@ -232,4 +245,5 @@ public class IndicoGUI extends Application {
     public static void main(String[] args) {
         launch(args);
     }
+
 }
