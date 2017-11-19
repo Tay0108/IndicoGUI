@@ -60,7 +60,7 @@ public class IndicoGUI extends Application {
     private Label imageLabel;
 
     @FXML
-    private void browse() {
+    private void browse() throws NullPointerException {
         directory = directoryChooser.showDialog(stage);
         photosList.clear(); // clearing list
         if (!directory.isDirectory() || directory.listFiles() == null) {
