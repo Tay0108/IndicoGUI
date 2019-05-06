@@ -24,6 +24,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 
 public class IndicoGUI extends Application {
@@ -227,8 +228,8 @@ public class IndicoGUI extends Application {
         /* config */
         stage = primaryStage;
         stage.setResizable(false); // preventing window resizing
-        Parent root = FXMLLoader.load(getClass().getResource("layout.fxml"));
-        root.getStylesheets().add(IndicoGUI.class.getResource("main.css").toExternalForm());
+        Parent root = FXMLLoader.load(getClass().getClassLoader().getResource("layout.fxml"));
+        root.getStylesheets().add(IndicoGUI.class.getClassLoader().getResource("main.css").toExternalForm());
         stage.setTitle("IndicoGUI");
         stage.setScene(new Scene(root, 1000, 600));
         stage.getIcons().add(new Image("file:icon.png"));
